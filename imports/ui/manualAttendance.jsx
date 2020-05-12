@@ -21,7 +21,6 @@ import { Classe } from "../api/classes";
 import { Attendance } from "../api/attendance";
 
 export class ManualAttendance extends Component {
-  //nothin
   state = {
     searchText: "",
     modal: false,
