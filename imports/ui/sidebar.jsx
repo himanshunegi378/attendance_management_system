@@ -1,32 +1,47 @@
 import React, { Component } from "react";
-import { Menu, Icon, Button, Layout, Avatar } from "antd";
+import { Avatar, Button, Icon, Layout, Menu } from "antd";
 import { withTracker } from "meteor/react-meteor-data";
-const SubMenu = Menu.SubMenu;
-const { Header, Content, Footer, Sider } = Layout;
 import "antd/dist/antd.css";
 import { Link } from "@reach/router";
-import MenuItem from "antd/lib/menu/MenuItem";
+
+const SubMenu = Menu.SubMenu;
+const { Header, Content, Footer, Sider } = Layout;
 
 export class Sidebar extends Component {
+  state = {
+    collapsed: false
+  };
+
+  onCollapse = collapsed => {
+    console.log(collapsed);
+    this.setState({ collapsed });
+  };
+
   render() {
     console.log(Roles.userIsInRole(Meteor.userId(), "teacher"));
     return (
-      <Sider collapsible>
+      <Sider
+        collapsible
+        collapsed={this.state.collapsed}
+        onCollapse={this.onCollapse}
+      >
         <div className="logo" />
         {Roles.userIsInRole(Meteor.userId(), "teacher") ? (
           <Menu theme="dark" defaultSelectedKeys={["1"]} mode="inline">
             <div class="sidebar-section sidebar-user clearfix">
               <div class="sidebar-user-avatar">
-              <Avatar style={{ backgroundColor: '#87d068' }} size="small" icon="user" />    {this.props.user ? this.props.user.username : 'NA'} </div>
-
-
-           
-          
+                <Avatar
+                  style={{ backgroundColor: "#87d068" }}
+                  size="small"
+                  icon="user"
+                />
+                <span>{this.props.user ? this.props.user.username : "NA"}</span>
+              </div>
             </div>
             <Menu.Item key="1">
               <Link to="/">
                 <Icon type="home" />
-                Home
+                <span>Home</span>
               </Link>
             </Menu.Item>
 
@@ -56,20 +71,26 @@ export class Sidebar extends Component {
             <Menu.Item key="11">
               <Link to="/view-students">
                 <Icon type="usergroup-add" />
-                View Students
+                <span>View Students</span>
               </Link>
             </Menu.Item>
-           
+
             <Menu.Item>
-              <Button
+              <Icon
+                onClick={() => {
+                  Meteor.logout();
+                  location.reload();
+                }}
+                type="logout"
+              />
+              <span
                 onClick={() => {
                   Meteor.logout();
                   location.reload();
                 }}
               >
-                {" "}
-                Log Out{" "}
-              </Button>
+                Log Out
+              </span>
             </Menu.Item>
           </Menu>
         ) : (
@@ -111,8 +132,8 @@ export class Sidebar extends Component {
 
 const ListPageContainer = withTracker(({ id }) => {
   const status = Meteor.subscribe("_roles");
-  const status2 = Meteor.subscribe('get.users');
-  const user = Meteor.users.findOne({_id : Meteor.userId()});
+  const status2 = Meteor.subscribe("get.users");
+  const user = Meteor.users.findOne({ _id: Meteor.userId() });
   const ready = status.ready();
   return {
     ready,

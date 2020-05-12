@@ -1,36 +1,26 @@
 import React, { Component } from "react";
 import { withTracker } from "meteor/react-meteor-data";
-import {
-  Table,
-  Divider,
-  Tag,
-  Popconfirm,
-  Card,
-  Button,
-  Icon,
-  Input,
-  message
-} from "antd";
-import moment from "moment";
-import { Link, navigate } from "@reach/router";
+import { Button, Card, Icon, Input, message, Table } from "antd";
+import { navigate } from "@reach/router";
 import Highlighter from "react-highlight-words";
-import { MDBBadge, MDBContainer } from "mdbreact";
+import {
+  CardBody,
+  MDBBtn,
+  MDBCard,
+  MDBCardBody,
+  MDBModal,
+  MDBModalBody,
+  MDBModalFooter,
+  MDBModalHeader,
+} from "mdbreact";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "bootstrap-css-only/css/bootstrap.min.css";
 import "mdbreact/dist/css/mdb.css";
-import {
-  MDBBtn,
-  MDBModal,
-  MDBModalBody,
-  MDBModalHeader,
-  MDBModalFooter
-} from "mdbreact";
-import { Accounts } from "meteor/accounts-base";
 import { Student } from "../api/student";
-import { Select, Spin } from "antd";
 import { Classe } from "../api/classes";
+import { Attendance } from "../api/attendance";
 
-export class listPatients extends Component {
+export class ManualAttendance extends Component {
   state = {
     searchText: "",
     modal: false,
@@ -40,37 +30,57 @@ export class listPatients extends Component {
     username: "",
     selected: [],
     modal3: false,
-    classes: []
+    classes: [],
+    selectedRowKeys: [],
+  };
+
+  componentWillReceiveProps = (nextProps, nextContext) => {
+    const { LatestAttendance } = nextProps;
+    if (this.props.LatestAttendance !== LatestAttendance) {
+      const arr1 = this.props.LatestAttendance;
+      const arr2 = nextProps.LatestAttendance;
+      console.log(arr1, arr2);
+      const new_latest_attendance = arr1.concat(arr2);
+      const mySet = new Set(new_latest_attendance);
+      this.setState({
+        selectedRowKeys: Array.from(mySet),
+      });
+    }
   };
 
   markAtt = () => {
-      Meteor.call("mark.attendance.many", this.state.selected, this.props.id, (err, res) => {
-          if(err){
-            this.setState({modal : false})
+    Meteor.call(
+      "mark.attendance.many",
+      this.state.selectedRowKeys,
+      this.props.id,
+      (err, res) => {
+        if (err) {
+          this.setState({ modal: false });
 
-              message.error(err.reason)
-          }else {
-              this.setState({modal : false})
-              message.success("Student(s) marked!")
-          }
-      });
-  }
-   
-  getColumnSearchProps = dataIndex => ({
+          message.error(err.reason);
+        } else {
+          this.setState({ modal: false });
+          message.success("Student(s) marked!");
+        }
+      }
+    );
+  };
+
+  getColumnSearchProps = (dataIndex) => ({
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
       confirm,
-      clearFilters
+      clearFilters,
     }) => (
       <div style={{ padding: 8 }}>
         <Input
-          ref={node => {
+          ref={(node) => {
             this.searchInput = node;
           }}
           placeholder={`Search ${dataIndex}`}
           value={selectedKeys[0]}
-          onChange={e =>
+          onChange={(e) =>
             setSelectedKeys(e.target.value ? [e.target.value] : [])
           }
           onPressEnter={() => this.handleSearch(selectedKeys, confirm)}
@@ -94,7 +104,7 @@ export class listPatients extends Component {
         </Button>
       </div>
     ),
-    filterIcon: filtered => (
+    filterIcon: (filtered) => (
       <Icon type="search" style={{ color: filtered ? "#1890ff" : undefined }} />
     ),
     onFilter: (value, record) =>
@@ -102,27 +112,31 @@ export class listPatients extends Component {
         .toString()
         .toLowerCase()
         .includes(value.toLowerCase()),
-    onFilterDropdownVisibleChange: visible => {
+    onFilterDropdownVisibleChange: (visible) => {
       if (visible) {
         setTimeout(() => this.searchInput.select());
       }
     },
-    render: text => (
+    render: (text) => (
       <Highlighter
         highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
         searchWords={[this.state.searchText]}
         autoEscape
         textToHighlight={text.toString()}
       />
-    )
+    ),
   });
   handleSearch = (selectedKeys, confirm) => {
     confirm();
     this.setState({ searchText: selectedKeys[0] });
   };
-  handleReset = clearFilters => {
+  handleReset = (clearFilters) => {
     clearFilters();
     this.setState({ searchText: "" });
+  };
+  onSelectChange = (selectedRowKeys) => {
+    console.log("selectedRowKeys changed: ", selectedRowKeys);
+    this.setState({ selectedRowKeys });
   };
   render() {
     const columns = [
@@ -130,59 +144,47 @@ export class listPatients extends Component {
         title: "Name",
         dataIndex: "username",
         key: "username",
-        ...this.getColumnSearchProps("username")
-      },
-      {
-        title: "Email",
-        key: "email",
-        render: (text, record) => (
-          <a href={`mailto:${record.email}`}>{record.email}</a>
-        )
+        ...this.getColumnSearchProps("username"),
       },
       {
         title: "Action",
         key: "action",
         render: (text, record) => (
           <span>
-            <MDBBtn outline color="success" size="sm" onClick={() => navigate('/student/' + record._id)}>
-          
+            <MDBBtn
+              outline
+              color="success"
+              size="sm"
+              onClick={() => navigate("/student/" + record._id)}
+            >
               View
             </MDBBtn>
           </span>
-        )
-      }
-    ];
-    const rowSelection = {
-      onChange: (selectedRowKeys, selectedRows) => {
-        console.log(
-          `selectedRowKeys: ${selectedRowKeys}`,
-          "selectedRows: ",
-          selectedRows
-        );
-        let arr = [];
-        selectedRows.map(a => arr.push(a.accountId));
-        this.setState({ selected: arr });
+        ),
       },
-      getCheckboxProps: record => ({
-        id: record.accountId
-      })
+    ];
+    const { selectedRowKeys } = this.state;
+
+    const rowSelection = {
+      selectedRowKeys,
+      onChange: this.onSelectChange,
     };
+    console.log(this.state.selected);
     return (
-      <Card
+      <MDBCard
         style={{ marginLeft: "5%", marginRight: "2%" }}
         loading={!this.props.ready}
       >
-       <MDBModal
+        <MDBModal
           isOpen={this.state.modal}
           toggle={() => this.setState({ modal: false })}
         >
           <MDBModalHeader toggle={() => this.setState({ modal: false })}>
-              Mark Attendance
+            Mark Attendance
           </MDBModalHeader>
           <MDBModalBody>
-          
-           Are you sure you want to mark student(s) present for class?
-           </MDBModalBody>
+            Are you sure you want to mark student(s) present for class?
+          </MDBModalBody>
           <MDBModalFooter>
             <MDBBtn
               color="secondary"
@@ -190,52 +192,67 @@ export class listPatients extends Component {
             >
               Cancel
             </MDBBtn>
-            <MDBBtn
-              color="secondary"
-              onClick={() => this.markAtt()}
-            >
+            <MDBBtn color="secondary" onClick={() => this.markAtt()}>
               Confirm
             </MDBBtn>
           </MDBModalFooter>
         </MDBModal>
-        <MDBBtn
-          outline
-          color="default"
-          size="sm"
-          onClick={() => this.setState({ modal: true })}
-          disabled={this.state.selected.length == 0 ? true : false}
-        >
-          {" "}
-          Mark Attendance
-        </MDBBtn>
-        <Table
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={this.props.data}
-          rowKey={record => record._id}
-        />
-      </Card>
+        <MDBCardBody>
+          <MDBBtn
+            outline
+            color="default"
+            size="sm"
+            onClick={() => this.setState({ modal: true })}
+          >
+            {" "}
+            Mark Attendance
+          </MDBBtn>
+          <Table
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={this.props.data}
+            rowKey={(record) => record.accountId}
+          />
+        </MDBCardBody>
+      </MDBCard>
     );
   }
 }
 
-const ViewArticlesWrapper = withTracker(props => {
+const ViewArticlesWrapper = withTracker((props) => {
   const classId = props.id;
+  console.log(classId);
   const status = Meteor.subscribe("get.students");
   const status2 = Meteor.subscribe("get.classes");
+  const status3 = Meteor.subscribe("get.attendance", classId);
   const classs = Classe.findOne({ _id: classId });
+  const LatestAttendance = [];
   let data;
   if (classs) {
     let list = classs.studentList || [];
     data = Student.find({ _id: { $in: list } }).fetch();
+    data.forEach((student) => {
+      const stAtt = Attendance.findOne({
+        classId: classId,
+        studentId: student.accountId,
+        counter: classs.classCounter,
+      });
+      if (stAtt) {
+        LatestAttendance.push(stAtt.studentId);
+      }
+    });
+  }
+  if (LatestAttendance) {
+    console.log(LatestAttendance);
   }
   const ready = status.ready();
   return {
     data,
+    LatestAttendance,
     ready,
     classs,
-    ...props
+    ...props,
   };
-})(listPatients);
+})(ManualAttendance);
 
 export default ViewArticlesWrapper;

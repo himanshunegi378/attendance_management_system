@@ -5,23 +5,25 @@ import { withTracker } from "meteor/react-meteor-data";
 import {
   MDBCard,
   MDBCardBody,
-  MDBCol,
-  MDBCardTitle,
-  MDBCardText,
   MDBCardHeader,
-  MDBBtn,
+  MDBCardText,
+  MDBCol,
   MDBContainer,
   MDBRow
 } from "mdbreact";
-import { Card, Icon, Avatar, List, Select } from "antd";
-const { Meta } = Card;
+import { Card, Icon, List, Select } from "antd";
 import Calendar from "./Calender";
+import { Link } from "@reach/router";
+
+const { Meta } = Card;
+
 export class Dashboard extends Component {
   state = {
     dangerZone: [],
     dates: [],
     classId: ""
   };
+
   componentDidMount() {
     Meteor.call("danger.zone", (err, res) => {
       if (err) {
@@ -32,7 +34,8 @@ export class Dashboard extends Component {
       }
     });
   }
-  getDates = (r) => {
+
+  getDates = r => {
     Meteor.call("get.attedance.dates", r, (err, res) => {
       if (err) {
         console.log(err);
@@ -41,12 +44,16 @@ export class Dashboard extends Component {
       }
     });
   };
+
   render() {
     return (
       <MDBContainer>
         <MDBRow>
           <MDBCol md="12">
-            <MDBCard color="blue-gradient" style={{color : 'white'}} text="white">
+            <MDBCard
+              style={{ color: "white", "background-color": "#999999" }}
+              text="white"
+            >
               <MDBCardBody>
                 <MDBRow>
                   <MDBCol md="6">
@@ -91,8 +98,8 @@ export class Dashboard extends Component {
             </MDBCard>
           </MDBCol>
           <MDBCol md="3">
-            <a href="/view-classes">
-              <Card style={{ marginTop: "10%" }}>
+            <Link to="/view-classes">
+              <Card className="hoverable" style={{ marginTop: "10%" }}>
                 <Meta
                   avatar={
                     <Icon
@@ -107,11 +114,11 @@ export class Dashboard extends Component {
                   title="Manage Classes"
                 />
               </Card>
-            </a>
+            </Link>
           </MDBCol>
           <MDBCol md="3">
-            <a href="/view-students">
-              <Card style={{ marginTop: "10%" }}>
+            <Link to="/view-students">
+              <Card className="hoverable" style={{ marginTop: "10%" }}>
                 <Meta
                   avatar={
                     <Icon
@@ -126,10 +133,10 @@ export class Dashboard extends Component {
                   title="Manage Students"
                 />
               </Card>
-            </a>
+            </Link>
           </MDBCol>
           <MDBCol md="3">
-            <Card style={{ marginTop: "10%" }}>
+            <Card className="hoverable" style={{ marginTop: "10%" }}>
               <Meta
                 avatar={
                   <Icon
@@ -146,7 +153,7 @@ export class Dashboard extends Component {
             </Card>
           </MDBCol>
           <MDBCol md="3">
-            <Card style={{ marginTop: "10%" }}>
+            <Card className="hoverable" style={{ marginTop: "10%" }}>
               <Meta
                 avatar={
                   <Icon
@@ -202,8 +209,9 @@ export class Dashboard extends Component {
                 <Select
                   placeholder="Select Class"
                   style={{ width: "200px" }}
-                  onChange={r => {this.setState({classId : r});
-                  this.getDates(r);
+                  onChange={r => {
+                    this.setState({ classId: r });
+                    this.getDates(r);
                   }}
                 >
                   {this.props.classes

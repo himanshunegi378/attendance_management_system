@@ -1,38 +1,67 @@
-import React, { Component } from 'react'
-import QRCode from 'qrcode.react';
-import {Rnd} from 'react-rnd';
+import React, { Component } from "react";
+import QRCode from "qrcode.react";
+import { Rnd } from "react-rnd";
 import { withTracker } from "meteor/react-meteor-data";
-import { Card, Spin } from 'antd'
-import { Classe } from '../api/classes'
+import { Card, Spin } from "antd";
+import { Classe } from "../api/classes";
+import ManualAttendance from "./manualAttendance";
+import {
+  CardBody,
+  MDBCard,
+  MDBCardBody,
+  MDBCardText,
+  MDBCardTitle,
+  MDBCol,
+  MDBRow
+} from "mdbreact";
+import InfoPanel from "./student/homepage/infoPanel";
+import AttendanceInfo from "./student/homepage/attendanceInfo";
+import QrCodeReader from "./QR_code_reader";
 class QrCode extends Component {
   render() {
     return (
-      <Card style={{backgroundColor : 'white'}} loading={!this.props.ready}>       <Rnd
-        default={{
-          x: 300,
-          y: 100,
-          width: 300,
-          height: 300,
-        }}
+      <>
+        <MDBRow>
+          <MDBCol md="12" style={{ height: "50vh" }}>
+            <MDBCard
+              style={{ backgroundColor: "white" }}
+              loading={!this.props.ready}
+              style={{ height: "100%", width: "auto" }}
+            >
+              {" "}
+              {this.props.data ? (
+                <MDBCardBody>
+                  <QRCode
+                    value={`/attendance/${this.props.id}/d/${this.props.today}/c/${this.props.data.classCounter}`}
+                    style={{ height: "100%", width: "auto" }}
+                  />
+                </MDBCardBody>
+              ) : (
+                <Spin />
+              )}
+            </MDBCard>
+          </MDBCol>
+        </MDBRow>
+        <hr/>
+        <MDBRow>
+          <MDBCol lg="10" md="12">
 
-        bounds="window"
-      >
-      {this.props.data ? 
-          <QRCode value={`https://capstone-classify.herokuapp.com/attendance/${this.props.id}/d/${this.props.today}/c/${this.props.data.classCounter}`} style={{ width : '100%', height : 'auto'}}/>
-          : <Spin />}
-          </Rnd>
-          </Card>
-    )
+            <ManualAttendance id={this.props.id} />
+          </MDBCol>
+        </MDBRow>
+      </>
+    );
   }
 }
-
 
 const ViewArticlesWrapper = withTracker(props => {
   const id = props.id;
   const status = Meteor.subscribe("get.classes");
-  const data = Classe.findOne({_id : id})
+  const data = Classe.findOne({ _id: id });
   let today = new Date().getDay();
-  console.log(today);
+  if (today) {
+    console.log(today);
+  }
   const ready = status.ready();
   return {
     id,
